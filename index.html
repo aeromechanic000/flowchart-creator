@@ -1,5 +1,5 @@
-<!DOCTYPE html><html lang="en">
-    <head>
+<!DOCTYPE html><html lang="en"><head>
+    
     <meta http-equiv="Content-Security-Policy" content="
   default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com;
   connect-src 'self' https://text.pollinations.ai;
@@ -9,7 +9,7 @@
   worker-src 'self';
   upgrade-insecure-requests;
   block-all-mixed-content;">
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flowchart Creator by Minecraft AI</title>
     <style>
@@ -357,6 +357,7 @@
         }
 
         .shape-text, .free-text {
+    fill: #000000;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             text-anchor: middle;
@@ -368,6 +369,7 @@
         }
 
         .free-text {
+    fill: #000000;
             cursor: move;
             pointer-events: all;
         }
@@ -874,11 +876,11 @@
                     <div class="current-color-display" id="current-color"></div>
                     <div class="color-palette">
                         <div class="color-option active pixelated" data-color="#f0f8ff" style="background-color: #f0f8ff;" title="Light Blue"></div>
-                        <div class="color-option pixelated" data-color="#e1f5fe" style="background-color: #e1f5fe;" title="Sky Blue"></div>
                         <div class="color-option pixelated" data-color="#f3e5f5" style="background-color: #f3e5f5;" title="Light Purple"></div>
                         <div class="color-option pixelated" data-color="#e8f5e8" style="background-color: #e8f5e8;" title="Light Green"></div>
                         <div class="color-option pixelated" data-color="#fff9c4" style="background-color: #fff9c4;" title="Light Yellow"></div>
-                        <div class="color-option pixelated" data-color="#fdfffff" style="background-color: #ffffff;" title="White"></div>
+                        <div class="color-option pixelated" data-color="#fdfdfd" style="background-color: #fdfdfd;" title="White"></div>
+                        <div class="color-option pixelated" data-color="#0d0d0d" style="background-color: #0d0d0d;" title="Black"></div>
                     </div>
                 </div>
                 
@@ -960,7 +962,14 @@
     </div>
 
     <script>
-        // Global variables
+        
+        function generateOrthogonalPath(x1, y1, x2, y2) {
+            const midX = (x1 + x2) / 2;
+            return `M${x1},${y1} L${midX},${y1} L${midX},${y2} L${x2},${y2}`;
+        }
+
+
+// Global variables
         let currentMode = 'select';
         let shapes = [];
         let arrows = [];
