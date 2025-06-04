@@ -261,12 +261,14 @@
 
         /* Color Selection Styles */
         .color-selector {
+            flex: 1;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
         .color-palette {
+            flex: 1;
             display: flex;
             gap: 4px;
             align-items: center;
@@ -561,6 +563,7 @@
 
         .ai-generate-btn {
             background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            width : 220px;
             color: white;
             border: 2px solid #e65100;
             padding: 8px 15px;
@@ -570,7 +573,6 @@
             text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.2s;
-            display: flex;
             align-items: center;
             gap: 5px;
             font-family: 'Courier New', monospace;
@@ -766,38 +768,6 @@
             gap: 6px;
         }
         
-        .minimap {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-            height: 100px;
-            background: rgba(255,255,255,0.9);
-            border: 3px solid #8b4513;
-            border-radius: 4px;
-            z-index: 100;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            display: none;
-        }
-        
-        .minimap.visible {
-            display: block;
-        }
-        
-        .minimap-content {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            background: #f0f8ff;
-        }
-        
-        .minimap-viewport {
-            position: absolute;
-            border: 2px solid #4CAF50;
-            background: rgba(76, 175, 80, 0.1);
-            pointer-events: none;
-        }
     </style>
 </head>
 <body>
@@ -858,7 +828,6 @@
                     <span class="zoom-level" id="zoom-level">100%</span>
                     <button onclick="zoomOut()" class="zoom-btn" title="Zoom Out">-</button>
                     <button onclick="resetZoom()" class="tool-btn">Reset</button>
-                    <button onclick="toggleMinimap()" class="tool-btn">Minimap</button>
                 </div>
                 
                 <!-- File Controls -->
@@ -875,9 +844,12 @@
                     <span class="tool-group-label">🎨 Color</span>
                     <div class="current-color-display" id="current-color"></div>
                     <div class="color-palette">
+                        <div class="color-option pixelated" data-color="#ffccd2" style="background-color: #ffccd2;" title="Light Red"></div>
+                        <div class="color-option pixelated" data-color="#e8f5e8" style="background-color: #e8f5e8;" title="Light Green"></div>
                         <div class="color-option active pixelated" data-color="#f0f8ff" style="background-color: #f0f8ff;" title="Light Blue"></div>
                         <div class="color-option pixelated" data-color="#f3e5f5" style="background-color: #f3e5f5;" title="Light Purple"></div>
-                        <div class="color-option pixelated" data-color="#e8f5e8" style="background-color: #e8f5e8;" title="Light Green"></div>
+                        <div class="color-option pixelated" data-color="#fff3e0" style="background-color: #fff3e0;" title="Light Orange"></div>
+                        <div class="color-option pixelated" data-color="#f5f5f5" style="background-color: #f5f5f5;" title="Light Gray"></div>
                         <div class="color-option pixelated" data-color="#fff9c4" style="background-color: #fff9c4;" title="Light Yellow"></div>
                         <div class="color-option pixelated" data-color="#fdfdfd" style="background-color: #fdfdfd;" title="White"></div>
                         <div class="color-option pixelated" data-color="#0d0d0d" style="background-color: #0d0d0d;" title="Black"></div>
@@ -897,11 +869,11 @@
                  <!-- Shape Controls -->
                 <div class="tool-group">
                     <span class="tool-group-label">🧱 Shapes</span>
-                    <button onclick="setMode('rectangle')" class="tool-btn">Process</button>
                     <button onclick="setMode('ellipse')" class="tool-btn">Oval</button>
-                    <button onclick="setMode('diamond')" class="tool-btn">Decision</button>
-                    <button onclick="setMode('parallelogram')" class="tool-btn">Input/Output</button>
                     <button onclick="setMode('hexagon')" class="tool-btn">Preparation</button>
+                    <button onclick="setMode('parallelogram')" class="tool-btn">Input/Output</button>
+                    <button onclick="setMode('diamond')" class="tool-btn">Decision</button>
+                    <button onclick="setMode('rectangle')" class="tool-btn">Process</button>
                     <button onclick="setMode('circle')" class="tool-btn">Connector</button>
                 </div>
                 
@@ -928,11 +900,6 @@
                 </svg>
             </div>
             
-            <div class="minimap" id="minimap">
-                <div class="minimap-content" id="minimap-content">
-                    <div class="minimap-viewport" id="minimap-viewport"></div>
-                </div>
-            </div>
         </div>
         
         <div class="status-bar">
@@ -963,8 +930,18 @@
     <script>
         
         function generateOrthogonalPath(x1, y1, x2, y2) {
+            // Calculate the midpoint for the bend
             const midX = (x1 + x2) / 2;
-            return `M${x1},${y1} L${midX},${y1} L${midX},${y2} L${x2},${y2}`;
+            
+            // Create a path with horizontal and vertical segments
+            if (Math.abs(x2 - x1) > Math.abs(y2 - y1)) {
+                // Horizontal-first routing
+                return `M${x1},${y1} L${midX},${y1} L${midX},${y2} L${x2},${y2}`;
+            } else {
+                // Vertical-first routing  
+                const midY = (y1 + y2) / 2;
+                return `M${x1},${y1} L${x1},${midY} L${x2},${midY} L${x2},${y2}`;
+            }
         }
 
 
@@ -991,7 +968,6 @@
         let isPanning = false;
         let panStartX = 0;
         let panStartY = 0;
-        let minimapVisible = false;
 
         // Get canvas element
         const canvas = document.getElementById('canvas');
@@ -1010,9 +986,6 @@
         const aiApplyBtn = document.getElementById('ai-apply-btn');
         const zoomLevelEl = document.getElementById('zoom-level');
         const canvasPositionEl = document.getElementById('canvas-position');
-        const minimap = document.getElementById('minimap');
-        const minimapContent = document.getElementById('minimap-content');
-        const minimapViewport = document.getElementById('minimap-viewport');
 
         // Connection point positions for different shapes
         const connectionPoints = {
@@ -1042,9 +1015,9 @@
             ],
             hexagon: [
                 { x: 0.5, y: 0, id: 'top' },
-                { x: 0.875, y: 0.5, id: 'right' },
+                { x: 1, y: 0.5, id: 'right' },
                 { x: 0.5, y: 1, id: 'bottom' },
-                { x: 0.125, y: 0.5, id: 'left' }
+                { x: 0, y: 0.5, id: 'left' }
             ],
             cylinder: [
                 { x: 0.5, y: 0.15, id: 'top' },
@@ -1066,9 +1039,6 @@
             zoomLevelEl.textContent = `${Math.round(canvasTransform.scale * 100)}%`;
             canvasPositionEl.textContent = `Position: ${Math.round(canvasTransform.x)}, ${Math.round(canvasTransform.y)}`;
             
-            if (minimapVisible) {
-                updateMinimapViewport();
-            }
         }
         
         function startPanning(event) {
@@ -1155,111 +1125,6 @@
                 }
             }
         }
-        
-        function toggleMinimap() {
-            minimapVisible = !minimapVisible;
-            minimap.classList.toggle('visible', minimapVisible);
-            
-            if (minimapVisible) {
-                updateMinimapContent();
-                updateMinimapViewport();
-                updateStatus('🗺️ Minimap enabled - Shows an overview of your flowchart');
-            } else {
-                updateStatus('🗺️ Minimap disabled');
-            }
-        }
-        
-        function updateMinimapContent() {
-            // Clear previous content
-            while (minimapContent.firstChild) {
-                if (minimapContent.firstChild !== minimapViewport) {
-                    minimapContent.removeChild(minimapContent.firstChild);
-                }
-            }
-            
-            // Calculate the minimap scale
-            const canvasWidth = 3000;
-            const canvasHeight = 3000;
-            const minimapWidth = minimap.clientWidth;
-            const minimapHeight = minimap.clientHeight;
-            const scaleX = minimapWidth / canvasWidth;
-            const scaleY = minimapHeight / canvasHeight;
-            const scale = Math.min(scaleX, scaleY);
-            
-            // Create simplified representations of shapes
-            shapes.forEach(shape => {
-                const miniShape = document.createElement('div');
-                miniShape.style.position = 'absolute';
-                miniShape.style.left = `${shape.x * scale}px`;
-                miniShape.style.top = `${shape.y * scale}px`;
-                miniShape.style.width = `${shape.width * scale}px`;
-                miniShape.style.height = `${shape.height * scale}px`;
-                miniShape.style.backgroundColor = shape.color || '#f0f8ff';
-                miniShape.style.border = '1px solid #333';
-                minimapContent.appendChild(miniShape);
-            });
-        }
-        
-        function updateMinimapViewport() {
-            if (!minimapVisible) return;
-            
-            // Calculate the minimap scale
-            const canvasWidth = 3000;
-            const canvasHeight = 3000;
-            const minimapWidth = minimap.clientWidth;
-            const minimapHeight = minimap.clientHeight;
-            const scaleX = minimapWidth / canvasWidth;
-            const scaleY = minimapHeight / canvasHeight;
-            const scale = Math.min(scaleX, scaleY);
-            
-            // Calculate the viewport position and size
-            const containerWidth = canvasContainer.clientWidth;
-            const containerHeight = canvasContainer.clientHeight;
-            
-            // Calculate visible area in canvas coordinates
-            const visibleLeft = -canvasTransform.x / canvasTransform.scale;
-            const visibleTop = -canvasTransform.y / canvasTransform.scale;
-            const visibleWidth = containerWidth / canvasTransform.scale;
-            const visibleHeight = containerHeight / canvasTransform.scale;
-            
-            // Convert to minimap coordinates
-            minimapViewport.style.left = `${visibleLeft * scale}px`;
-            minimapViewport.style.top = `${visibleTop * scale}px`;
-            minimapViewport.style.width = `${visibleWidth * scale}px`;
-            minimapViewport.style.height = `${visibleHeight * scale}px`;
-        }
-        
-        // Minimap click event for navigation
-        minimapContent.addEventListener('click', function(e) {
-            if (e.target === minimapViewport) return;
-            
-            // Calculate the click position in minimap coordinates
-            const rect = minimapContent.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-            
-            // Calculate the corresponding position in canvas coordinates
-            const canvasWidth = 3000;
-            const canvasHeight = 3000;
-            const minimapWidth = minimap.clientWidth;
-            const minimapHeight = minimap.clientHeight;
-            const scaleX = minimapWidth / canvasWidth;
-            const scaleY = minimapHeight / canvasHeight;
-            const scale = Math.min(scaleX, scaleY);
-            
-            // Calculate the center position to navigate to
-            const canvasX = clickX / scale;
-            const canvasY = clickY / scale;
-            
-            // Center the view on the clicked position
-            const containerWidth = canvasContainer.clientWidth;
-            const containerHeight = canvasContainer.clientHeight;
-            
-            canvasTransform.x = containerWidth / 2 - canvasX * canvasTransform.scale;
-            canvasTransform.y = containerHeight / 2 - canvasY * canvasTransform.scale;
-            
-            updateCanvasTransform();
-        });
         
         // AI Flowchart Generation
         aiGenerateBtn.addEventListener('click', generateAIFlowchart);
@@ -1488,10 +1353,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             
             updateCanvasTransform();
             
-            // Update minimap if visible
-            if (minimapVisible) {
-                updateMinimapContent();
-            }
         }
 
         // Color selection setup
@@ -1761,6 +1622,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                     console.log('Arrow start:', shape.id, pointId);
                 } else if (arrowStart.shape.id !== shape.id) {
                     createArrow(arrowStart.shape, arrowStart.pointId, shape, pointId);
+                    autoSwitchToSelect();
                     updateStatus('🏹 Arrow created! Click connection points to create more arrows');
                     arrowStart = null;
                 }
@@ -1768,6 +1630,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
         }
 
         function createFreeText(x, y) {
+            selectColor('#0d0d0d');
             const text = {
                 id: nextId++,
                 x: x,
@@ -1837,6 +1700,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
 
         function createShape(type, x, y) {
             console.log('Creating shape:', type);
+            selectColor('#fdfdfd');
             
             let width = 100, height = 50;
             if (type === 'diamond') {
@@ -1863,11 +1727,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             
             shapes.push(shape);
             renderShape(shape);
-            
-            // Update minimap if visible
-            if (minimapVisible) {
-                updateMinimapContent();
-            }
             
             setTimeout(() => {
                 selectShape(shape.id);
@@ -1974,6 +1833,10 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             
             arrows.push(arrow);
             renderArrow(arrow);
+            
+            setTimeout(() => {
+                selectArrow(arrow.id);
+            }, 10);
         }
 
         function renderArrow(arrow) {
@@ -1990,29 +1853,33 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             arrowGroup.classList.add('arrow-group');
             arrowGroup.setAttribute('data-id', arrow.id);
             
-            // Create invisible selection area for easier clicking
-            const selectionArea = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            selectionArea.setAttribute('x1', startPos.x);
-            selectionArea.setAttribute('y1', startPos.y);
-            selectionArea.setAttribute('x2', endPos.x);
-            selectionArea.setAttribute('y2', endPos.y);
+            // Create orthogonal path
+            const pathData = generateOrthogonalPath(startPos.x, startPos.y, endPos.x, endPos.y);
+            
+            // Create invisible selection area (wider path for easier clicking)
+            const selectionArea = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            selectionArea.setAttribute('d', pathData);
             selectionArea.classList.add('arrow-selection-area');
             selectionArea.setAttribute('data-id', arrow.id);
+            selectionArea.style.strokeWidth = '15';
+            selectionArea.style.stroke = 'transparent';
+            selectionArea.style.fill = 'none';
             
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', startPos.x);
-            line.setAttribute('y1', startPos.y);
-            line.setAttribute('x2', endPos.x);
-            line.setAttribute('y2', endPos.y);
-            line.classList.add('arrow');
-            line.setAttribute('data-id', arrow.id);
-            line.style.stroke = arrow.color || '#333333';
+            // Create visible arrow path
+            const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            arrowPath.setAttribute('d', pathData);
+            arrowPath.classList.add('arrow');
+            arrowPath.setAttribute('data-id', arrow.id);
+            arrowPath.style.stroke = arrow.color || '#333333';
+            arrowPath.style.strokeWidth = '2';
+            arrowPath.style.fill = 'none';
+            arrowPath.style.markerEnd = 'url(#arrowhead)';
             
             // Create arrow endpoints for editing
             const endpoints = createArrowEndpoints(arrow, startPos, endPos);
             
             arrowGroup.appendChild(selectionArea);
-            arrowGroup.appendChild(line);
+            arrowGroup.appendChild(arrowPath);
             arrowGroup.appendChild(endpoints);
             canvas.appendChild(arrowGroup);
             
@@ -2517,10 +2384,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                 updateShapePosition(dragData.shape);
                 updateArrows();
                 
-                // Update minimap if visible
-                if (minimapVisible) {
-                    updateMinimapContent();
-                }
             }
         });
 
@@ -2538,16 +2401,8 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                 updateStatus('📝 Text moved');
             } else if (dragData && dragData.type === 'shape') {
                 updateStatus('🧱 Shape moved');
-                // Update minimap after moving shape
-                if (minimapVisible) {
-                    updateMinimapContent();
-                }
             } else if (resizeData) {
                 updateStatus('🧱 Shape resized');
-                // Update minimap after resizing shape
-                if (minimapVisible) {
-                    updateMinimapContent();
-                }
             }
             
             dragData = null;
@@ -2689,22 +2544,18 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             const arrowGroup = document.querySelector(`.arrow-group[data-id="${arrow.id}"]`);
             if (!arrowGroup) return;
             
-            const line = arrowGroup.querySelector('.arrow');
+            const pathData = generateOrthogonalPath(startPos.x, startPos.y, endPos.x, endPos.y);
+            
+            const arrowPath = arrowGroup.querySelector('.arrow');
             const selectionArea = arrowGroup.querySelector('.arrow-selection-area');
             const endpoints = arrowGroup.querySelectorAll('.arrow-endpoint');
             
-            if (line) {
-                line.setAttribute('x1', startPos.x);
-                line.setAttribute('y1', startPos.y);
-                line.setAttribute('x2', endPos.x);
-                line.setAttribute('y2', endPos.y);
+            if (arrowPath) {
+                arrowPath.setAttribute('d', pathData);
             }
             
             if (selectionArea) {
-                selectionArea.setAttribute('x1', startPos.x);
-                selectionArea.setAttribute('y1', startPos.y);
-                selectionArea.setAttribute('x2', endPos.x);
-                selectionArea.setAttribute('y2', endPos.y);
+                selectionArea.setAttribute('d', pathData);
             }
             
             if (endpoints.length >= 2) {
@@ -2766,10 +2617,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             
             clearSelection();
             
-            // Update minimap if visible
-            if (minimapVisible) {
-                updateMinimapContent();
-            }
         }
 
         function deleteArrow(id) {
@@ -2866,6 +2713,11 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                     if (shapeElement && shape.color) {
                         // Set fill attribute directly instead of relying on style
                         shapeElement.setAttribute('fill', shape.color);
+
+                        // ADD STROKE BOUNDARIES TO SHAPES
+                        shapeElement.setAttribute('stroke', '#333333');  // Dark gray border
+                        shapeElement.setAttribute('stroke-width', '2');   // Border thickness
+
                         // Remove any conflicting style
                         shapeElement.removeAttribute('style');
                     }
@@ -2959,9 +2811,12 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                 try {
                     const data = JSON.parse(e.target.result);
                     loadData(data);
-                    // Center the view on the imported flowchart
-                    centerViewOnFlowchart();
-                    updateStatus('📦 Flowchart imported successfully');
+                    // Remove this line to preserve original positions:
+                    // centerViewOnFlowchart();
+                    // Reset view to default position instead
+                    resetZoom();
+                    
+                    updateStatus('📦 Flowchart imported successfully at original positions');
                 } catch (error) {
                     alert('Invalid JSON file');
                     updateStatus('❌ Failed to import flowchart');
@@ -2983,10 +2838,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             arrows.forEach(renderArrow);
             freeTexts.forEach(renderFreeText);
             
-            // Update minimap if visible
-            if (minimapVisible) {
-                updateMinimapContent();
-            }
         }
 
         function clearCanvas() {
@@ -2998,10 +2849,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             nextId = 1;
             updateStatus('🧹 Canvas cleared');
             
-            // Update minimap if visible
-            if (minimapVisible) {
-                updateMinimapContent();
-            }
         }
 
         // Initialize
@@ -3019,6 +2866,5 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             }
         });
     </script>
-
 
 </body></html>
