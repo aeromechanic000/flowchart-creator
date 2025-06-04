@@ -93,6 +93,7 @@
         .discord-link {
             display: flex;
             align-items: center;
+            justify-content: center;
             width: 180px;
             gap: 8px;
             color: #1da1f2;
@@ -124,6 +125,7 @@
             width: 180px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             color: #1da1f2;
             text-decoration: none;
@@ -154,6 +156,7 @@
             width: 180px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             color: #1da1f2;
             text-decoration: none;
@@ -539,9 +542,10 @@
         .ai-generator {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
-            flex-grow: 1; /* 关键属性 */
-            min-width: 0; /* 防止内容溢出导致宽度失效 */
+            flex-grow: 1; 
+            min-width: 0;
         }
 
         .ai-input {
@@ -563,7 +567,9 @@
 
         .ai-generate-btn {
             background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            display: flex;
             width : 220px;
+            line-height : 1.5;
             color: white;
             border: 2px solid #e65100;
             padding: 8px 15px;
@@ -574,6 +580,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: all 0.2s;
             align-items: center;
+            justify-content: center;
             gap: 5px;
             font-family: 'Courier New', monospace;
         }
