@@ -15,4 +15,4 @@ Thanks to [Pollinations.AI](https://pollinations.ai/), we can generate a flowcha
 - [Minecraft AI-Python](https://github.com/aeromechanic000/minecraft-ai-python) : This Python-based implementation reimagines the same agent logic in a more research-focused environment. It prioritizes system robustness, fine-grained control, and compatibility with
 the Python scientific and AI tooling ecosystem. It is particularly well-suited for educational use, long-term
 behavioral analysis, and the development of memory-rich agents
-- [Minecraft AI Whitepapers](https://github.com/aeromechanic000/minecraft-ai-whitepapers) : The place where Minecraft AI whitepapers and technical reports are released.
+- [Minecraft AI Whitepapers](https://github.com/aeromechanic000/minecraft-ai-whitepaper) : The place where Minecraft AI whitepapers and technical reports are released.
