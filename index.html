@@ -939,7 +939,7 @@
     </div>
 
     <script>
-        
+        // Find and update existing arrowhead or create a new one
         function generateOrthogonalPath(x1, y1, x2, y2) {
             // Calculate the midpoint for the bend
             const midX = (x1 + x2) / 2;
@@ -1850,6 +1850,76 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             }, 10);
         }
 
+        function calculateArrowOffsets(startPos, endPos, startPoint, endPoint, offsetDistance = 20) {
+            let startOffsetX = startPos.x;
+            let startOffsetY = startPos.y;
+            
+            switch (startPoint) {
+                case 'top':
+                    startOffsetY -= offsetDistance;
+                    break;
+                case 'bottom':
+                    startOffsetY += offsetDistance;
+                    break;
+                case 'left':
+                    startOffsetX -= offsetDistance;
+                    break;
+                case 'right':
+                    startOffsetX += offsetDistance;
+                    break;
+            }
+            
+            let endOffsetX = endPos.x;
+            let endOffsetY = endPos.y;
+            
+            switch (endPoint) {
+                case 'top':
+                    endOffsetY -= offsetDistance;
+                    break;
+                case 'bottom':
+                    endOffsetY += offsetDistance;
+                    break;
+                case 'left':
+                    endOffsetX -= offsetDistance;
+                    break;
+                case 'right':
+                    endOffsetX += offsetDistance;
+                    break;
+            }
+            
+            return {
+                startOffset: { x: startOffsetX, y: startOffsetY },
+                endOffset: { x: endOffsetX, y: endOffsetY }
+            };
+        }
+
+        function generateCompleteArrowPath(startPos, endPos, startPoint, endPoint, offsetDistance = 20) {
+            const offsets = calculateArrowOffsets(startPos, endPos, startPoint, endPoint, offsetDistance);
+            
+            // Start with connection point
+            let pathData = `M ${startPos.x} ${startPos.y}`;
+            
+            // Line to start offset point
+            pathData += ` L ${offsets.startOffset.x} ${offsets.startOffset.y}`;
+            
+            // Generate orthogonal path between offset points
+            const orthogonalPath = generateOrthogonalPath(
+                offsets.startOffset.x, 
+                offsets.startOffset.y, 
+                offsets.endOffset.x, 
+                offsets.endOffset.y
+            );
+            
+            // Extract the path commands after the initial M command
+            const orthogonalCommands = orthogonalPath.substring(orthogonalPath.indexOf(' '));
+            pathData += orthogonalCommands;
+            
+            // Line from end offset point to connection point
+            pathData += ` L ${endPos.x} ${endPos.y}`;
+            
+            return pathData;
+        }
+
         function renderArrow(arrow) {
             const startShape = shapes.find(s => s.id === arrow.startId);
             const endShape = shapes.find(s => s.id === arrow.endId);
@@ -1865,7 +1935,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             arrowGroup.setAttribute('data-id', arrow.id);
             
             // Create orthogonal path
-            const pathData = generateOrthogonalPath(startPos.x, startPos.y, endPos.x, endPos.y);
+            const pathData = generateCompleteArrowPath(startPos, endPos, arrow.startPoint, arrow.endPoint);
             
             // Create invisible selection area (wider path for easier clicking)
             const selectionArea = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -2555,7 +2625,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             const arrowGroup = document.querySelector(`.arrow-group[data-id="${arrow.id}"]`);
             if (!arrowGroup) return;
             
-            const pathData = generateOrthogonalPath(startPos.x, startPos.y, endPos.x, endPos.y);
+            const pathData = generateCompleteArrowPath(startPos, endPos, arrow.startPoint, arrow.endPoint);
             
             const arrowPath = arrowGroup.querySelector('.arrow');
             const selectionArea = arrowGroup.querySelector('.arrow-selection-area');
@@ -2863,6 +2933,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
         }
 
         // Initialize
+        createSmallArrowheadMarker();
         updateDeleteButton();
         updateColorSelectorState();
         updateSelectionStatus();
