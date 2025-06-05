@@ -408,11 +408,20 @@
             border: 2px solid #4CAF50;
             padding: 4px;
             font-size: 14px;
-            text-align: center;
+            text-align: left;
             background: white;
             z-index: 1000;
             font-family: 'Courier New', monospace;
             font-weight: bold;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            line-height: 1.2;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #45a049;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
         }
 
         .resize-handle {
@@ -1757,6 +1766,24 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             return textMap[type] || 'Text';
         }
 
+        function updateMultiLineText(textElement, text, x, y) {
+            // Clear existing content
+            textElement.innerHTML = '';
+            
+            const lines = text.split('\n');
+            const lineHeight = 16; // Adjust based on font size
+            const totalHeight = lines.length * lineHeight;
+            const startY = y - (totalHeight / 2) + (lineHeight / 2);
+            
+            lines.forEach((line, index) => {
+                const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                tspan.textContent = line;
+                tspan.setAttribute('x', x);
+                tspan.setAttribute('y', startY + (index * lineHeight));
+                textElement.appendChild(tspan);
+            });
+        }
+
         function renderShape(shape) {
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             group.setAttribute('data-id', shape.id);
@@ -1768,11 +1795,14 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             shapeElement.style.fill = shape.color || currentColor;
             
             const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            textElement.setAttribute('data-id', shape.id);
             textElement.setAttribute('x', shape.x + shape.width / 2);
             textElement.setAttribute('y', shape.y + shape.height / 2);
             textElement.classList.add('shape-text');
-            textElement.textContent = shape.text;
             textElement.setAttribute('data-id', shape.id);
+
+            // Use the multi-line text function
+            updateMultiLineText(textElement, shape.text, shape.x + shape.width / 2, shape.y + shape.height / 2);
             
             // Create resize handles and connection points
             const resizeHandles = createResizeHandles(shape);
@@ -2569,9 +2599,8 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
             
             group.insertBefore(newShapeElement, textElement);
             
-            // Update text position
-            textElement.setAttribute('x', shape.x + shape.width / 2);
-            textElement.setAttribute('y', shape.y + shape.height / 2);
+            // Update text position (replace the existing text update lines)
+            updateMultiLineText(textElement, shape.text, shape.x + shape.width / 2, shape.y + shape.height / 2);
             
             // Update resize handles and connection points
             updateResizeHandles(shape);
@@ -2648,34 +2677,50 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
         }
 
         function editText(shape, textElement) {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = shape.text;
-            input.className = 'text-input';
+            const textarea = document.createElement('textarea');
+            textarea.value = shape.text;
+            textarea.className = 'text-input';
             
             // Calculate position considering canvas transform
             const rect = canvasContainer.getBoundingClientRect();
             const posX = shape.x * canvasTransform.scale + shape.width/2 * canvasTransform.scale + canvasTransform.x + rect.left;
             const posY = shape.y * canvasTransform.scale + shape.height/2 * canvasTransform.scale + canvasTransform.y + rect.top;
             
-            input.style.left = (posX - 50) + 'px';
-            input.style.top = (posY - 10) + 'px';
-            input.style.width = '100px';
+            textarea.style.left = (posX - 50) + 'px';
+            textarea.style.top = (posY - 25) + 'px';
+            textarea.style.width = '160px';
+            textarea.style.minHeight = '20px';
+            textarea.style.resize = 'both';
+            textarea.style.overflow = 'hidden';
             
-            document.body.appendChild(input);
-            input.focus();
-            input.select();
+            // Auto-resize function
+            function autoResize() {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+            
+            textarea.addEventListener('input', autoResize);
+            
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            
+            // Initial resize
+            autoResize();
             
             function finishEdit() {
-                shape.text = input.value || getDefaultText(shape.type);
-                textElement.textContent = shape.text;
-                document.body.removeChild(input);
+                shape.text = textarea.value || getDefaultText(shape.type);
+                updateMultiLineText(textElement, shape.text, shape.x + shape.width / 2, shape.y + shape.height / 2);
+                document.body.removeChild(textarea);
                 updateSelectionStatus();
             }
             
-            input.addEventListener('blur', finishEdit);
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') finishEdit();
+            textarea.addEventListener('blur', finishEdit);
+            // Remove the Enter key handler to allow line breaks
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    finishEdit();
+                }
             });
         }
 
@@ -2807,10 +2852,7 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                     const textElement = shapeGroup.querySelector('.shape-text');
                     if (textElement) {
                         // Ensure proper text positioning attributes
-                        textElement.setAttribute('x', shape.x + shape.width / 2);
-                        textElement.setAttribute('y', shape.y + shape.height / 2);
                         textElement.setAttribute('text-anchor', 'middle');
-                        textElement.setAttribute('dominant-baseline', 'middle');
                         textElement.setAttribute('font-family', 'Courier New, monospace');
                         textElement.setAttribute('font-size', '14');
                         textElement.setAttribute('font-weight', 'bold');
@@ -2821,8 +2863,8 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
                         textElement.removeAttribute('class');
                         textElement.removeAttribute('style');
                         
-                        // Ensure text content is properly set
-                        textElement.textContent = shape.text;
+                        // Update multi-line text for export
+                        updateMultiLineText(textElement, shape.text, shape.x + shape.width / 2, shape.y + shape.height / 2);
                     }
                 }
             });
@@ -2933,7 +2975,6 @@ Create a complete, valid JSON object for a flowchart representing: "${userInput}
         }
 
         // Initialize
-        createSmallArrowheadMarker();
         updateDeleteButton();
         updateColorSelectorState();
         updateSelectionStatus();
