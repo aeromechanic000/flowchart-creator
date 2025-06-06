@@ -4,6 +4,8 @@ Web Application: [Flowchart Creator by Minecraft AI](https://flowchart-creator.v
 
 This is a simple web app for creating flowcharts in a Minecraft style UI. Have fun! 
 
+![Screenshot 2025-06-06 at 21.08.46.png](https://s2.loli.net/2025/06/06/NGbkHC6Q1BIJspL.png)
+
 Thanks to [Pollinations.AI](https://pollinations.ai/), we can generate a flowchart by just providing an idea!
 
 ## Minecraft AI
