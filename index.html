@@ -2921,8 +2921,9 @@ Provide a complete, valid JSON flowchart representing: "${userInput}";`
             freeTexts.forEach(text => {
                 const textElement = svgClone.querySelector(`.free-text[data-id="${text.id}"]`);
                 if (textElement) {
-                    textElement.setAttribute('x', text.x);
-                    textElement.setAttribute('y', text.y);
+                    const approxWidth = text.text.length * 8;
+                    textElement.setAttribute('x', text.x - approxWidth/2);
+                    textElement.setAttribute('y', text.y + 3);
                     textElement.setAttribute('font-family', 'Courier New, monospace');
                     textElement.setAttribute('font-size', '14');
                     textElement.setAttribute('font-weight', 'bold');
